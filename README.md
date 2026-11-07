@@ -1,4 +1,7 @@
-# 📋 Life Dashboard
+# CodingCamp-2November26-Dedi-Triwibowo
+Mini Project - Coding Camp  - Batch 2 November 2026 - Dedi Triwibowo
+
+## 📋 Life Dashboard
 
 A clean, minimal **homepage-style dashboard** that helps you organize your day. It shows the current time, a formatted calendar, a personalized greeting, a Pomodoro focus timer, a full to-do list, and quick links to your favorite websites — all in one page, with a dark mode and bilingual (English / Indonesian) support.
 
