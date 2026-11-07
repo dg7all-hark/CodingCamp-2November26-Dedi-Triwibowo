@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Life Dashboard — Focus &amp; To-Do Workspace</title>
+  <meta name="description" content="A minimalist personal homepage and productivity dashboard featuring a live clock, customizable greeting, Pomodoro focus timer, smart to-do list, and quick links." />
+
+  <!-- Prevent theme flash on initial load -->
+  <script>
+    (function () {
+      try {
+        var savedTheme = localStorage.getItem('life_dashboard_theme');
+        if (savedTheme === 'dark' || (!savedTheme && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+          document.documentElement.setAttribute('data-theme', 'dark');
+        }
+      } catch (e) {}
+    })();
+  </script>
+
+  <!-- Google Fonts: Instrument Serif, Plus Jakarta Sans, JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Tailwind CSS Browser CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+
+  <!-- Project Stylesheet (Folder Rule: single CSS file inside css/) -->
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="dashboard-shell">
+    <!-- ====================================================================
+         TOP COMMAND HEADER: Clock, Date, Greeting + Custom Name, Theme Toggle
+         ==================================================================== -->
+    <header class="command-header" role="banner">
+      <div class="header-left">
+        <div id="header-date" class="header-date">Loading date...</div>
+        <div class="greeting-row">
+          <h1 class="greeting-heading">
+            <span id="greeting-prefix">Good morning,</span>
+            <span class="editable-name-wrapper">
+              <span
+                id="user-name"
+                class="editable-name"
+                contenteditable="true"
+                spellcheck="false"
+                role="textbox"
+                aria-label="Your custom name (click to edit)"
+                title="Click to customize your name"
+              >Alex</span>
+              <button
+                type="button"
+                id="edit-name-btn"
+                class="edit-name-btn"
+                title="Edit your display name"
+                aria-label="Edit display name"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 20h9"></path>
+                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                </svg>
+              </button>
+              <span id="name-saved-badge" class="name-saved-badge" aria-live="polite">Saved</span>
+            </span>
+          </h1>
+        </div>
+        <p id="display-name-hint" class="display-name-hint" data-i18n="displayName.hint">edit your display name</p>
+      </div>
+
+      <div class="header-right">
+        <div id="flip-clock" class="flip-clock-container"></div>
+        <div class="header-controls-row">
+        <!-- Live Task Progress Summary Pill -->
+        <div class="header-stat-pill" title="Daily task completion status">
+          <span class="header-stat-dot"></span>
+          <span id="header-progress-text">0/0 Tasks Done</span>
+        </div>
+
+        <!-- 12H / 24H Clock Toggle -->
+        <button
+          type="button"
+          id="clock-format-btn"
+          class="icon-pill-btn"
+          title="Switch between 12-hour and 24-hour time format"
+          aria-label="Toggle 12-hour or 24-hour clock"
+        >
+          12H
+        </button>
+        <!-- EN / ID Language Toggle -->
+        <button type="button" id="language-toggle-btn" class="icon-pill-btn" title="Switch between English and Indonesian" aria-label="Toggle language EN/ID">EN</button>
+
+        <!-- Tactile Sound FX Toggle -->
+        <button
+          type="button"
+          id="sound-toggle-btn"
+          class="icon-pill-btn active-toggle"
+          title="Toggle acoustic completion &amp; timer chimes"
+          aria-label="Toggle sound effects"
+        >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          </svg>
+          <span id="sound-toggle-label">SFX On</span>
+        </button>
+
+        <!-- Dark / Light Mode Toggle -->
+        <button
+          type="button"
+          id="theme-toggle-btn"
+          class="icon-pill-btn"
+          title="Toggle Dark / Light Mode (Alt + T)"
+          aria-label="Toggle color theme"
+        >
+          <!-- Sun Icon (shown in dark mode) -->
+          <svg class="theme-icon-sun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <!-- Moon Icon (shown in light mode) -->
+          <svg class="theme-icon-moon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+          <span id="theme-toggle-label">Dark</span>
+        </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- ====================================================================
+         MAIN BENTO GRID WORKSPACE
+         ==================================================================== -->
+    <main class="bento-grid" role="main">
+      <!-- LEFT COLUMN (5 Cols): Focus Timer + Quick Links -->
+      <div class="left-column">
+        <!-- 1. FOCUS TIMER (POMODORO) CARD -->
+        <section id="focus-timer-card" class="bento-card" aria-labelledby="timer-heading">
+          <div class="card-header">
+            <div class="card-title-group">
+              <span class="card-icon-badge" aria-hidden="true">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="13" r="8"></circle>
+                  <path d="M12 9v4l2 2"></path>
+                  <path d="M5 3 2 6"></path>
+                  <path d="m22 6-3-3"></path>
+                  <path d="M6.38 18.7 4 21"></path>
+                  <path d="M17.64 18.67 20 21"></path>
+                </svg>
+              </span>
+              <h2 id="timer-heading" class="card-title" data-i18n="cardTitles.focusTimer">Focus Timer</h2>
+            </div>
+            <span id="timer-status-badge" class="timer-status-badge">Ready</span>
+          </div>
+
+          <!-- Pomodoro Duration Presets & Custom Minute Input -->
+          <div class="timer-presets-bar" aria-label="Pomodoro duration settings">
+            <div class="preset-pills" role="group" aria-label="Quick duration presets">
+              <button type="button" class="preset-btn" data-minutes="15">15m</button>
+              <button type="button" class="preset-btn active" data-minutes="25">25m</button>
+              <button type="button" class="preset-btn" data-minutes="45">45m</button>
+              <button type="button" class="preset-btn" data-minutes="60">60m</button>
+            </div>
+            <div class="custom-duration-box">
+              <label for="custom-minutes-input" class="custom-duration-label">Min:</label>
+              <input
+                type="number"
+                id="custom-minutes-input"
+                class="custom-duration-input"
+                min="1"
+                max="120"
+                value="25"
+                title="Set custom Pomodoro minutes (1 to 120)"
+              />
+            </div>
+          </div>
+
+          <!-- Circular SVG Progress Dial -->
+          <div class="timer-dial-container">
+            <svg class="timer-svg" viewBox="0 0 210 210" aria-hidden="true">
+              <circle class="timer-ring-track" cx="105" cy="105" r="92"></circle>
+              <circle
+                id="timer-ring-progress"
+                class="timer-ring-progress"
+                cx="105"
+                cy="105"
+                r="92"
+                stroke-dasharray="578.05"
+                stroke-dashoffset="0"
+              ></circle>
+            </svg>
+            <div class="timer-dial-center">
+              <div id="timer-readout" class="timer-readout" aria-live="polite">25:00</div>
+              <div id="timer-subtext" class="timer-subtext">25m target • 0 sessions done</div>
+            </div>
+          </div>
+
+          <!-- Start / Pause / Reset Controls -->
+          <div class="timer-controls">
+            <button type="button" id="timer-start-pause-btn" class="btn-primary-timer">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                <polygon points="6 3 20 12 6 21 6 3"></polygon>
+              </svg>
+              <span>Start</span>
+            </button>
+            <button type="button" id="timer-reset-btn" class="btn-secondary-timer" title="Reset timer to full duration">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                <path d="M3 3v5h5"></path>
+              </svg>
+              <span>Reset</span>
+            </button>
+            <button type="button" id="timer-plus-one-btn" class="btn-secondary-timer" title="Add 1 extra minute">
+              +1m
+            </button>
+          </div>
+        </section>
+
+        <!-- 2. QUICK LINKS CARD -->
+        <section class="bento-card" aria-labelledby="links-heading">
+          <div class="card-header">
+            <div class="card-title-group">
+              <span class="card-icon-badge" aria-hidden="true">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                  <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                </svg>
+              </span>
+              <h2 id="links-heading" class="card-title" data-i18n="cardTitles.quickLinks">Quick Links</h2>
+            </div>
+            <button type="button" id="toggle-link-drawer-btn" class="add-link-trigger">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              <span data-i18n="links.addLink">Add Link</span>
+            </button>
+          </div>
+
+          <!-- Collapsible Add Link Form Drawer -->
+          <div id="link-drawer" class="link-drawer">
+            <form id="link-form" novalidate>
+              <div class="link-drawer-inputs">
+                <input
+                  type="text"
+                  id="link-title-input" data-i18n-placeholder="links.titlePlaceholder"
+                  class="input-field"
+                  placeholder="Title (e.g., Figma)"
+                  maxlength="28"
+                  required
+                />
+                <input
+                  type="text"
+                  id="link-url-input" data-i18n-placeholder="links.urlPlaceholder"
+                  class="input-field"
+                  placeholder="URL (e.g., figma.com)"
+                  required
+                />
+              </div>
+              <div class="link-drawer-actions" style="margin-top: 10px;">
+                <span id="link-error-msg" class="link-error-msg" aria-live="polite"></span>
+                <div style="display: flex; gap: 6px; margin-left: auto;">
+                  <button type="button" id="cancel-link-btn" data-i18n="links.cancel" class="add-link-trigger">Cancel</button>
+                  <button
+                    type="submit"
+                    class="add-link-trigger"
+                    style="background: var(--accent-primary); color: #fff; border-color: transparent;" data-i18n="links.saveLink">
+                    Save Link
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
+
+          <!-- Favorite Websites Grid -->
+          <div id="quick-links-grid" class="quick-links-grid" role="navigation" aria-label="Saved favorite websites">
+            <!-- Populated dynamically via js/app.js -->
+          </div>
+        </section>
+      </div>
+
+      <!-- RIGHT COLUMN (7 Cols): To-Do List Workspace -->
+      <div class="right-column">
+        <section class="bento-card" aria-labelledby="todo-heading">
+          <div class="card-header">
+            <div class="card-title-group">
+              <span class="card-icon-badge" aria-hidden="true">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M9 11l3 3L22 4"></path>
+                  <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                </svg>
+              </span>
+              <h2 id="todo-heading" class="card-title" data-i18n="cardTitles.todayTasks">Today's Tasks</h2>
+            </div>
+
+            <div class="todo-header-meta">
+              <button
+                type="button"
+                id="clear-completed-btn" data-i18n="tasks.clearDone"
+                class="clear-completed-btn"
+                style="display: none;"
+                title="Remove all completed tasks"
+              >
+                Clear Done
+              </button>
+              <span id="task-counter-pill" class="task-counter-pill">0 of 0 done</span>
+            </div>
+          </div>
+
+          <!-- Visual Completion Progress Bar -->
+          <div class="todo-progress-track" aria-hidden="true">
+            <div id="todo-progress-fill" class="todo-progress-fill"></div>
+          </div>
+
+          <!-- Task Input Form with Duplicate Prevention -->
+          <div class="task-input-wrapper">
+            <form id="task-form" class="task-form" novalidate>
+              <div class="task-input-container">
+                <input
+                  type="text"
+                  id="task-input" data-i18n-placeholder="tasks.placeholder"
+                  class="task-input"
+                  placeholder="Add a new task for today..."
+                  maxlength="160"
+                  autocomplete="off"
+                  aria-label="New task description"
+                />
+                <span class="kbd-shortcut-hint" title="Press '/' anywhere to focus">/</span>
+              </div>
+              <button type="submit" class="btn-add-task">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <line x1="12" y1="5" x2="12" y2="19"></line>
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                <span data-i18n="tasks.addTask">Add Task</span>
+              </button>
+            </form>
+
+            <!-- Inline Duplicate Task Prevention Warning -->
+            <div id="duplicate-warning" class="duplicate-warning" role="alert" aria-live="assertive">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+              <span id="duplicate-warning-text">This task already exists on your list.</span>
+            </div>
+          </div>
+
+          <!-- Filter & Sort Controls Bar -->
+          <div class="todo-toolbar">
+            <div class="filter-tabs" role="tablist" aria-label="Filter tasks by status">
+              <button type="button" class="filter-tab active" data-filter="all" role="tab">
+                <span data-i18n="tasks.all">All</span>
+                <span id="count-all" class="filter-count">0</span>
+              </button>
+              <button type="button" class="filter-tab" data-filter="active" role="tab">
+                <span data-i18n="tasks.active">Active</span>
+                <span id="count-active" class="filter-count">0</span>
+              </button>
+              <button type="button" class="filter-tab" data-filter="completed" role="tab">
+                <span data-i18n="tasks.completed">Completed</span>
+                <span id="count-completed" class="filter-count">0</span>
+              </button>
+            </div>
+
+            <div class="sort-control">
+              <label for="sort-select" class="sort-label" data-i18n="tasks.sortBy">Sort by:</label>
+              <select id="sort-select" class="sort-select" aria-label="Sort tasks">
+                <option value="incomplete" data-i18n-option="tasks.sortIncomplete">Incomplete First</option>
+                <option value="newest" data-i18n-option="tasks.sortNewest">Newest First</option>
+                <option value="oldest" data-i18n-option="tasks.sortOldest">Oldest First</option>
+                <option value="alpha" data-i18n-option="tasks.sortAlpha">Alphabetical (A–Z)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Task List Container -->
+          <ul id="task-list" class="task-list" aria-live="polite">
+            <!-- Populated dynamically via js/app.js -->
+          </ul>
+        </section>
+      </div>
+    </main>
+
+    <!-- ====================================================================
+         SUBTLE FOOTER & KEYBOARD SHORTCUT BAR
+         ==================================================================== -->
+    <footer class="dashboard-footer">
+      <div data-i18n="footer.info">All data is stored locally in your browser via Local Storage. Double-click any task to edit inline.</div>
+      <div class="shortcut-pills">
+        <span class="shortcut-item"><kbd>/</kbd><span data-i18n="footer.shortcutNewTask">New Task</span></span>
+        <span class="shortcut-item"><kbd>Alt + S</kbd><span data-i18n="footer.shortcutTimer">Start/Pause Timer</span></span>
+        <span class="shortcut-item"><kbd>Alt + T</kbd><span data-i18n="footer.shortcutTheme">Toggle Theme</span></span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Project Script (Folder Rule: single JS file inside js/) -->
+  <script src="js/app.js" defer></script>
+</body>
+</html>
